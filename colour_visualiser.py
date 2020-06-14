@@ -46,7 +46,7 @@ fill a patch with that colour to show the colour generated.
         self.horz_padding = 10
         self.vert_padding = 10
 
-        main_lbl = tk.Label(self, text = 'Colour Visualiser', padx = self.horz_padding, pady = self.vert_padding)
+        main_lbl = tk.Label(self, text = 'Colour Visualiser')
         main_lbl.grid(row = 0, column = 0, columnspan = 7, padx = self.horz_padding, pady = self.vert_padding)
 
         # the background colour of this label will be the input colour
@@ -54,8 +54,8 @@ fill a patch with that colour to show the colour generated.
         self.colour_lbl.grid(row = 1, column = 0, columnspan = 7)
 
         # RGB colour space
-        rgb_lbl = tk.Label(self, text = 'RGB Colour Space', padx = self.horz_padding, pady = self.vert_padding)
-        rgb_lbl.grid(row = 2, column = 0, columnspan = 3)
+        rgb_lbl = tk.Label(self, text = 'RGB Colour Space')
+        rgb_lbl.grid(row = 2, column = 0, columnspan = 3, padx = self.horz_padding, pady = self.vert_padding)
 
         self.rgb_red_str = tk.StringVar()
         self.rgb_red_lbl = tk.Label(self, text = 'Red')
@@ -84,49 +84,142 @@ fill a patch with that colour to show the colour generated.
         self.rgb_blu_ent.grid(row = 5, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
         self.rgb_blu_max.grid(row = 5, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
 
+        # CMY colour space
+        cmy_lbl = tk.Label(self, text = 'CMY colour space')
+        cmy_lbl.grid(row = 2, column = 4, columnspan = 3, padx = self.horz_padding, pady = self.vert_padding)
+
+        self.cmy_cyn_str = tk.StringVar()
+        self.cmy_cyn_lbl = tk.Label(self, text = 'Cyan')
+        self.cmy_cyn_ent = tk.Entry(self, textvariable = self.cmy_cyn_str)
+        self.cmy_cyn_max = tk.Label(self, text = ' / 255')
+        # self.cmy_cyn_tid = self.cmy_cyn_str.trace_add('write', self.colour_update_using_cmy)
+        self.cmy_cyn_lbl.grid(row = 3, column = 4, padx = self.horz_padding, pady = self.vert_padding)
+        self.cmy_cyn_ent.grid(row = 3, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.cmy_cyn_max.grid(row = 3, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        self.cmy_mgt_str = tk.StringVar()
+        self.cmy_mgt_lbl = tk.Label(self, text = 'Magenta')
+        self.cmy_mgt_ent = tk.Entry(self, textvariable = self.cmy_mgt_str)
+        self.cmy_mgt_max = tk.Label(self, text = ' / 255')
+        # self.cmy_mgt_tid = self.cmy_mgt_str.trace_add('write', self.colour_update_using_cmy)
+        self.cmy_mgt_lbl.grid(row = 4, column = 4, padx = self.horz_padding, pady = self.vert_padding)
+        self.cmy_mgt_ent.grid(row = 4, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.cmy_mgt_max.grid(row = 4, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        self.cmy_ylw_str = tk.StringVar()
+        self.cmy_ylw_lbl = tk.Label(self, text = 'Yellow')
+        self.cmy_ylw_ent = tk.Entry(self, textvariable = self.cmy_ylw_str)
+        self.cmy_ylw_max = tk.Label(self, text = ' / 255')
+        # self.cmy_ylw_tid = self.cmy_ylw_str.trace_add('write', self.colour_update_using_cmy)
+        self.cmy_ylw_lbl.grid(row = 5, column = 4, padx = self.horz_padding, pady = self.vert_padding)
+        self.cmy_ylw_ent.grid(row = 5, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.cmy_ylw_max.grid(row = 5, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+
         # HSV colour space
-        hsv_lbl = tk.Label(self, text = 'HSV Colour Space', padx = self.horz_padding, pady = self.vert_padding)
-        hsv_lbl.grid(row = 2, column = 4, columnspan = 3)
+        hsv_lbl = tk.Label(self, text = 'HSV Colour Space')
+        hsv_lbl.grid(row = 6, column = 0, columnspan = 3, padx = self.horz_padding, pady = self.vert_padding)
 
         self.hsv_hue_str = tk.StringVar()
         self.hsv_hue_lbl = tk.Label(self, text = 'Hue')
         self.hsv_hue_ent = tk.Entry(self, textvariable = self.hsv_hue_str)
         self.hsv_hue_max = tk.Label(self, text = ' / 359')
         self.hsv_hue_tid = self.hsv_hue_str.trace_add('write', self.colour_update_using_hsv)
-        self.hsv_hue_lbl.grid(row = 3, column = 4, padx = self.horz_padding, pady = self.vert_padding)
-        self.hsv_hue_ent.grid(row = 3, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
-        self.hsv_hue_max.grid(row = 3, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+        self.hsv_hue_lbl.grid(row = 7, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        self.hsv_hue_ent.grid(row = 7, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.hsv_hue_max.grid(row = 7, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
 
         self.hsv_sat_str = tk.StringVar()
         self.hsv_sat_lbl = tk.Label(self, text = 'Saturation')
         self.hsv_sat_ent = tk.Entry(self, textvariable = self.hsv_sat_str)
         self.hsv_sat_max = tk.Label(self, text = ' / 255')
         self.hsv_sat_tid = self.hsv_sat_str.trace_add('write', self.colour_update_using_hsv)
-        self.hsv_sat_lbl.grid(row = 4, column = 4, padx = self.horz_padding, pady = self.vert_padding)
-        self.hsv_sat_ent.grid(row = 4, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
-        self.hsv_sat_max.grid(row = 4, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+        self.hsv_sat_lbl.grid(row = 8, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        self.hsv_sat_ent.grid(row = 8, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.hsv_sat_max.grid(row = 8, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
 
         self.hsv_val_str = tk.StringVar()
         self.hsv_val_lbl = tk.Label(self, text = 'Value')
         self.hsv_val_ent = tk.Entry(self, textvariable = self.hsv_val_str)
         self.hsv_val_max = tk.Label(self, text = ' / 255')
         self.hsv_val_tid = self.hsv_val_str.trace_add('write', self.colour_update_using_hsv)
-        self.hsv_val_lbl.grid(row = 5, column = 4, padx = self.horz_padding, pady = self.vert_padding)
-        self.hsv_val_ent.grid(row = 5, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
-        self.hsv_val_max.grid(row = 5, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+        self.hsv_val_lbl.grid(row = 9, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        self.hsv_val_ent.grid(row = 9, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.hsv_val_max.grid(row = 9, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
 
-        # YIQ colour space
-        yiq_lbl = tk.Label(self, text = 'YIQ Colour Space', padx = self.horz_padding, pady = self.vert_padding)
-        yiq_lbl.grid(row = 6, column = 0, columnspan = 3)
+        # HSL colour space
+        hsl_lbl = tk.Label(self, text = 'HSL colour space')
+        hsl_lbl.grid(row = 6, column = 4, columnspan = 3, padx = self.horz_padding, pady = self.vert_padding)
 
-        self.yiq_lum_str = tk.StringVar()
-        self.yiq_lum_lbl = tk.Label(self, text = 'Luminance')
-        self.yiq_lum_ent = tk.Entry(self, textvariable = self.yiq_lum_str)
-        self.yiq_lum_max = tk.Label(self, text = ' / 255')
-        # self.yiq_lum_tid = self.yiq_lum_str.trace_add('write', self.colour_update_using_yiq)
-        self.yiq_lum_lbl.grid(row = 7, column = 0, padx = self.horz_padding, pady = self.vert_padding)
-        self.yiq_lum_ent.grid(row = 7, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
-        self.yiq_lum_max.grid(row = 7, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
+        self.hsl_hue_str = tk.StringVar()
+        self.hsl_hue_lbl = tk.Label(self, text = 'Hue')
+        self.hsl_hue_ent = tk.Entry(self, textvariable = self.hsl_hue_str)
+        self.hsl_hue_max = tk.Label(self, text = ' / 359')
+        # self.hsl_hue_tid = self.hsl_hue_str.trace_add('write', self.colour_update_using_hsl)
+        self.hsl_hue_lbl.grid(row = 7, column = 4, padx = self.horz_padding, pady = self.vert_padding)
+        self.hsl_hue_ent.grid(row = 7, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.hsl_hue_max.grid(row = 7, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        self.hsl_sat_str = tk.StringVar()
+        self.hsl_sat_lbl = tk.Label(self, text = 'Saturation')
+        self.hsl_sat_ent = tk.Entry(self, textvariable = self.hsl_sat_str)
+        self.hsl_sat_max = tk.Label(self, text = ' / 255')
+        # self.hsl_sat_tid = self.hsl_sat_str.trace_add('write', self.colour_update_using_hsl)
+        self.hsl_sat_lbl.grid(row = 8, column = 4, padx = self.horz_padding, pady = self.vert_padding)
+        self.hsl_sat_ent.grid(row = 8, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.hsl_sat_max.grid(row = 8, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        self.hsl_lum_str = tk.StringVar()
+        self.hsl_lum_lbl = tk.Label(self, text = 'Luminance')
+        self.hsl_lum_ent = tk.Entry(self, textvariable = self.hsl_lum_str)
+        self.hsl_lum_max = tk.Label(self, text = ' / 255')
+        # self.hsl_lum_tid = self.hsl_lum_str.trace_add('write', self.colour_update_using_hsl)
+        self.hsl_lum_lbl.grid(row = 9, column = 4, padx = self.horz_padding, pady = self.vert_padding)
+        self.hsl_lum_ent.grid(row = 9, column = 5, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        self.hsl_lum_max.grid(row = 9, column = 6, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        # # YIQ colour space
+        # yiq_lbl = tk.Label(self, text = 'YIQ colour space')
+        # yiq_lbl.grid(row = 6, column = 4, columnspan = 3, padx = self.horz_padding, pady = self.vert_padding)
+
+        # self.yiq_lum_str = tk.StringVar()
+        # self.yiq_lum_lbl = tk.Label(self, text = 'Luminance')
+        # self.yiq_lum_ent = tk.Entry(self, textvariable = self.yiq_lum_str)
+        # self.yiq_lum_max = tk.Label(self, text = ' / 255')
+        # # self.yiq_lum_tid = self.yiq_lum_str.trace_add('write', self.colour_update_using_yiq)
+        # self.yiq_lum_lbl.grid(row = 7, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        # self.yiq_lum_ent.grid(row = 7, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        # self.yiq_lum_max.grid(row = 7, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        # self.yiq_inp_str = tk.StringVar()
+        # self.yiq_inp_lbl = tk.Label(self, text = 'Magenta')
+        # self.yiq_inp_ent = tk.Entry(self, textvariable = self.yiq_inp_str)
+        # self.yiq_inp_max = tk.Label(self, text = ' / 255')
+        # # self.yiq_inp_tid = self.yiq_inp_str.trace_add('write', self.colour_update_using_yiq)
+        # self.yiq_inp_lbl.grid(row = 8, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        # self.yiq_inp_ent.grid(row = 8, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        # self.yiq_inp_max.grid(row = 8, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        # self.yiq_qdr_str = tk.StringVar()
+        # self.yiq_qdr_lbl = tk.Label(self, text = 'Yellow')
+        # self.yiq_qdr_ent = tk.Entry(self, textvariable = self.yiq_qdr_str)
+        # self.yiq_qdr_max = tk.Label(self, text = ' / 255')
+        # # self.yiq_qdr_tid = self.yiq_qdr_str.trace_add('write', self.colour_update_using_yiq)
+        # self.yiq_qdr_lbl.grid(row = 9, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        # self.yiq_qdr_ent.grid(row = 9, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        # self.yiq_qdr_max.grid(row = 9, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
+
+        # # YIQ colour space
+        # yiq_lbl = tk.Label(self, text = 'YIQ Colour Space', padx = self.horz_padding, pady = self.vert_padding)
+        # yiq_lbl.grid(row = 6, column = 0, columnspan = 3)
+
+        # self.yiq_lum_str = tk.StringVar()
+        # self.yiq_lum_lbl = tk.Label(self, text = 'Luminance')
+        # self.yiq_lum_ent = tk.Entry(self, textvariable = self.yiq_lum_str)
+        # self.yiq_lum_max = tk.Label(self, text = ' / 255')
+        # # self.yiq_lum_tid = self.yiq_lum_str.trace_add('write', self.colour_update_using_yiq)
+        # self.yiq_lum_lbl.grid(row = 7, column = 0, padx = self.horz_padding, pady = self.vert_padding)
+        # self.yiq_lum_ent.grid(row = 7, column = 1, padx = (self.horz_padding, 0), pady = self.vert_padding)
+        # self.yiq_lum_max.grid(row = 7, column = 2, padx = (0, self.horz_padding), pady = self.vert_padding)
 
 
     ###########################################################################
@@ -168,6 +261,18 @@ Returns:
         hex_code_of_colour = ''.join(f'{colour:02x}' for colour in (red, grn, blu))
         self.colour_lbl.config(bg = f'#{hex_code_of_colour}')
 
+        # update CMY numbers
+        cyn, mgt, ylw = (255 - colour for colour in (red, grn, blu))
+        # self.cmy_cyn_str.trace_remove('write', self.cmy_cyn_tid)
+        self.cmy_cyn_str.set(cyn)
+        # self.cmy_cyn_tid = self.cmy_cyn_str.trace_add('write', self.colour_update_using_cmy)
+        # self.cmy_mgt_str.trace_remove('write', self.cmy_mgt_tid)
+        self.cmy_mgt_str.set(mgt)
+        # self.cmy_mgt_tid = self.cmy_mgt_str.trace_add('write', self.colour_update_using_cmy)
+        # self.cmy_ylw_str.trace_remove('write', self.cmy_ylw_tid)
+        self.cmy_ylw_str.set(ylw)
+        # self.cmy_ylw_tid = self.cmy_ylw_str.trace_add('write', self.colour_update_using_cmy)
+
         # update HSV numbers
         hue, sat, val = colorsys.rgb_to_hsv(red / 255, grn / 255, blu / 255)
         self.hsv_hue_str.trace_remove('write', self.hsv_hue_tid)
@@ -179,6 +284,18 @@ Returns:
         self.hsv_val_str.trace_remove('write', self.hsv_val_tid)
         self.hsv_val_str.set(round(val * 255))
         self.hsv_val_tid = self.hsv_val_str.trace_add('write', self.colour_update_using_hsv)
+
+        # update HSL numbers
+        hue, lum, sat = colorsys.rgb_to_hls(red / 255, grn / 255, blu / 255)
+        # self.hsl_hue_str.trace_remove('write', self.hsl_hue_tid)
+        self.hsl_hue_str.set(round(hue * 359))
+        # self.hsl_hue_tid = self.hsl_hue_str.trace_add('write', self.colour_update_using_hsl)
+        # self.hsl_sat_str.trace_remove('write', self.hsl_sat_tid)
+        self.hsl_sat_str.set(round(sat * 255))
+        # self.hsl_sat_tid = self.hsl_sat_str.trace_add('write', self.colour_update_using_hsl)
+        # self.hsl_lum_str.trace_remove('write', self.hsl_lum_tid)
+        self.hsl_lum_str.set(round(lum * 255))
+        # self.hsl_lum_tid = self.hsl_lum_str.trace_add('write', self.colour_update_using_hsl)
 
     ###########################################################################
 
