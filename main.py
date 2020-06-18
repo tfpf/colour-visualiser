@@ -5,8 +5,9 @@ from colour_visualiser import *
 #######################################################################################################################
 
 def main():
-    Selector = colour_visualiser()
-    Selector.mainloop()
+    root = tk.Tk()
+    Selector = colour_visualiser(root)
+    root.mainloop()
 
 #######################################################################################################################
 
