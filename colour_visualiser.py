@@ -1,6 +1,7 @@
 #! /usr/local/bin/python3.8
 
 import colorsys
+import time
 import tkinter as tk
 
 pad_x = 10
@@ -50,12 +51,22 @@ fill a patch with that colour to show the colour generated.
         parent.title('Colour Visualiser')
         parent.resizable(False, False)
 
+        # this is a dictionary of all the contents of the editable entries
+        # they are indexed by the name of the colour space
+        self.contents_dict = dict()
+
+        # the plan is to use a chain of traces to update the colour information
+        # hence, use these to determine whether to continue or not
+        # otherwise, there will be an infinite loop of traces
+        self.trace_disabled = False   # disable all traces
+        self.update_disabled = 'none' # disable updating a colour space
+
         # title
         main_lbl = tk.Label(self, text = 'Colour Visualiser')
         main_lbl.grid(row = 0, column = 0, columnspan = 2, padx = pad_x, pady = pad_y)
 
         # the background colour of this label will be the input colour
-        self.colour_lbl = tk.Label(self, text = (' ' * 140 + '\n') * 2, bg = 'white')
+        self.colour_lbl = tk.Label(self, text = (' ' * 180 + '\n') * 2, bg = 'white')
         self.colour_lbl.grid(row = 1, column = 0, columnspan = 2, padx = pad_x, pady = (pad_y, 2 * pad_y))
 
         rgb_frame = self.create_frame_for_new_colour_space('RGB', [('Red', 255), ('Green', 255), ('Blue', 255)])
@@ -129,15 +140,54 @@ Representation of class object.
         main_lbl = tk.Label(curr_frame, text = f'{title} Colour Space')
         main_lbl.grid(row = 0, column = 0, columnspan = 3, padx = pad_x, pady = pad_y)
 
+        # this will contain the contents of the entries
+        contents = []
+
         for i, item in enumerate(parameter_list, 1):
-            lbl = tk.Label(curr_frame, text = item[0])
-            ent = tk.Entry(curr_frame)
-            lim = tk.Label(curr_frame, text = f' / {item[1]}')
+            var = tk.StringVar(name = f'{title}_{i}')
+            lbl = tk.Label(curr_frame, text = item[0], width = 10)
+            ent = tk.Entry(curr_frame, textvariable = var)
+            lim = tk.Label(curr_frame, text = f' / {item[1]}', width = 6)
+
+            var.trace_add('write', self.colour_update_wrapper)
             lbl.grid(row = i, column = 0, padx = pad_x, pady = pad_y)
             ent.grid(row = i, column = 1, pady = pad_y)
             lim.grid(row = i, column = 2, pady = pad_y)
 
+            contents.append(var)
+
+        # put `contents_item' in the dictionary
+        # it should be easily accessible, so index it with the name
+        self.contents_dict[title] = contents
+
         return curr_frame
+
+    ###########################################################################
+
+    def colour_update_wrapper(self, name, *args, **kwargs):
+
+        if self.trace_disabled:
+            return
+
+        colour_space = name[: -2]
+        colour_components = [item.get() for item in self.contents_dict[colour_space]]
+
+        if colour_space == 'RGB':
+            print('RGB update detected.')
+            self.trace_disabled = True
+            for i in self.contents_dict:
+                if i != self.update_disabled and i != 'RGB':
+                    print(f'{i} will be updated.')
+                    self.contents_dict[i][0].set(1)
+            self.trace_disabled = False
+            return
+
+        print(f'{colour_space} update detected.')
+        self.update_disabled = colour_space
+        print('RGB will be updated.')
+        self.contents_dict['RGB'][0].set(1)
+        time.sleep(1)
+        self.update_disabled = 'none'
 
     ###########################################################################
 
