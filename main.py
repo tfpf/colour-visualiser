@@ -6,7 +6,7 @@ from colour_visualiser import *
 
 def main():
     root = tk.Tk()
-    Selector = colour_visualiser(root)
+    Visualiser = colour_visualiser(root)
     root.mainloop()
 
 #######################################################################################################################
