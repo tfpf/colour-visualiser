@@ -16,45 +16,43 @@ class colour_visualiser(tk.Frame):
 Display a GUI with entries in which a user may enter how they want to generate
 a colour. Multiple colour spaces are supported. When the user updates the
 numbers for one colour space, the numbers for the others are automatically
-updated.
+updated. Also, a dedicated path (actually a `tk.Label') is updated to have that
+colour. This happens in real time (as the user types).
 
 Attributes:
     supported_colour_spaces: dict (map which can be used to access the
-        `tk.StringVar' instances associated with a colour space, the names of
-        the colour components, their maximum values, and functions to convert
-        to and from the RGB colour space; this is accomplished using
-        `namedtuple')
-    trace_disabled: bool (whether changes to any `tk.StringVar' are ignored)
-    update_disabled: str (name of colour space whose `tk.StringVar' were
-        written by the user, and should not be updated by the program)
+        `tk.IntVar' instances associated with a colour space, the names of the
+        colour components, their maximum values, and functions to convert to
+        and from the RGB colour space; this is accomplished using `namedtuple')
+    trace_disabled: bool (whether changes to any `tk.IntVar' are ignored)
+    update_disabled: str (name of colour space whose `tk.IntVar' were written
+        by the user, and should not be updated by the program)
     colour_lbl: tk.Label (its background colour will be set according to the
         components provided by the user)
 
 Methods:
     __init__
     __repr__
-    __str__
-    colour_update_using_rgb: convert from RGB
-    colour_update_using_hsv: convert from HSV
+    colour_update_wrapper: wrapper to call the following conversion functions
+    RGB_to_CMY: conversion function
+    CMY_to_RGB: conversion function
+    RGB_to_HSV: conversion function
+    HSV_to_RGB: conversion function
+    RGB_to_HSL: conversion function
+    HSL_to_RGB: conversion function
 '''
 
     ###########################################################################
 
 
     def __init__(self, parent):
-        '''\
-Create the front-end window. Update the entries with the colour space values in
-real time when the user writes valid numbers for a single colour space. Also
-fill a patch with that colour to show the colour generated.
-'''
-
         tk.Frame.__init__(self, parent)
         self.grid(padx = pad_x, pady = pad_y)
         parent.title('Colour Visualiser')
         parent.resizable(False, False)
 
         # trick to easily access any property of any colour space
-        # `components': list of 3 `tk.StringVar's which contain the components
+        # `components': list of 3 `tk.IntVar's which contain the components
         # `names': names of the 3 components
         # `maximum': the maximum values the 3 components may take
         # `from_RGB': function to convert some colour space to RGB colour space
@@ -63,23 +61,25 @@ fill a patch with that colour to show the colour generated.
         #     self.supported_colour_spaces['HSL'].maximum[1]
         #     self.supported_colour_spaces['RGB'].components[0]
         #     self.supported_colour_spaces['CMY'].from_RGB
-        colour_options = namedtuple('colour_options', 'components names maximum from_RGB to_RGB ')
-        self.supported_colour_spaces = {'RGB': colour_options([None,  None,    None],
-                                                              ['Red', 'Green', 'Blue'],
-                                                              [255,   255,     255],
-                                                              None, None),
-                                        'CMY': colour_options([None,   None,      None],
-                                                              ['Cyan', 'Magenta', 'Yellow'],
-                                                              [255,    255,       255],
-                                                              self.RGB_to_CMY, self.CMY_to_RGB),
-                                        'HSV': colour_options([None,  None,         None],
-                                                              ['Hue', 'Saturation', 'Value'],
-                                                              [359,   255,          255],
-                                                              self.RGB_to_HSV, self.HSV_to_RGB),
-                                        'HSL': colour_options([None,  None,         None],
-                                                              ['Hue', 'Saturation', 'Luminance'],
-                                                              [359,   255,          255],
-                                                              self.RGB_to_HSL, self.HSL_to_RGB)}
+        colour_options = namedtuple('colour_options', 'components names maximum from_RGB to_RGB')
+        self.supported_colour_spaces = {
+            'RGB': colour_options([None,  None,    None],
+                                  ['Red', 'Green', 'Blue'],
+                                  [255,   255,     255],
+                                  None, None),
+            'CMY': colour_options([None,   None,      None],
+                                  ['Cyan', 'Magenta', 'Yellow'],
+                                  [255,    255,       255],
+                                  self.RGB_to_CMY, self.CMY_to_RGB),
+            'HSV': colour_options([None,  None,         None],
+                                  ['Hue', 'Saturation', 'Value'],
+                                  [359,   255,          255],
+                                  self.RGB_to_HSV, self.HSV_to_RGB),
+            'HSL': colour_options([None,  None,         None],
+                                  ['Hue', 'Saturation', 'Luminance'],
+                                  [359,   255,          255],
+                                  self.RGB_to_HSL, self.HSL_to_RGB),
+        }
 
         # the plan is to use a chain of traces to update the colour information
         # hence, use these to determine whether to continue or not
@@ -92,7 +92,7 @@ fill a patch with that colour to show the colour generated.
         main_lbl.grid(row = 0, column = 0, columnspan = 2, padx = pad_x, pady = pad_y)
 
         # the background colour of this label will be the input colour
-        self.colour_lbl = tk.Label(self, text = (' ' * 180 + '\n') * 2, bg = 'white')
+        self.colour_lbl = tk.Label(self, text = (' ' * 140 + '\n') * 2, bg = 'black')
         self.colour_lbl.grid(row = 1, column = 0, columnspan = 2, padx = pad_x, pady = (pad_y, 2 * pad_y))
 
         # create one frame for each colour space
@@ -104,9 +104,9 @@ fill a patch with that colour to show the colour generated.
             name_lbl.grid(row = 0, column = 0, columnspan = 3, padx = pad_x, pady = pad_y)
 
             for k in range(3):
-                var = tk.StringVar(name = f'{colour_space}_{k}')
+                var = tk.IntVar(name = f'{colour_space}_{k}')
                 lbl = tk.Label(current_frame, text = self.supported_colour_spaces[colour_space].names[k], width = 10)
-                ent = tk.Entry(current_frame, textvariable = var)
+                ent = tk.Entry(current_frame, textvariable = var, justify = 'right', width = 6)
                 lim = tk.Label(current_frame, text = f' / {self.supported_colour_spaces[colour_space].maximum[k]}', width = 4)
 
                 var.trace_add('write', self.colour_update_wrapper)
@@ -121,13 +121,16 @@ fill a patch with that colour to show the colour generated.
             # this calculation is used to obtain the correct row and column
             current_frame.grid(row = i // 2 + 2, column = i % 2, padx = pad_x, pady = pad_y)
 
+        # initially, all the entries will contain 0
+        # this makes no sense
+        # representation of a colour cannot be the same in all colour spaces
+        # hence, at the beginning, force a colour conversion
+        for i in range(3):
+            self.supported_colour_spaces['RGB'].components[i].set(0)
+
     ###########################################################################
 
     def __repr__(self):
-        '''\
-Representation of class object.
-'''
-
         return 'colour_visualiser(object)'
 
     ###########################################################################
@@ -149,7 +152,7 @@ deadlock or infinite loop is prevented by checking `self.update_disabled'
 before modifying any entry.
 
 Args:
-    name: str (name of the `tk.StringVar' which triggered this function call)
+    name: str (name of the `tk.IntVar' which triggered this function call)
 
 Returns:
     None
@@ -157,6 +160,40 @@ Returns:
 
         if self.trace_disabled:
             return
+
+        current_colour_space = name[: -2]
+
+        # when any entry is written, check validity of all 3 components
+        # calling `get' on an empty `tk.IntVar' can raise an exception
+        # hence, handle it as a case of invalid input by doing nothing
+        try:
+            for i in range(3):
+                current_component = self.supported_colour_spaces[current_colour_space].components[i].get()
+                current_maximum = self.supported_colour_spaces[current_colour_space].maximum[i]
+                if not 0 <= current_component <= current_maximum:
+                    return
+        except tk.TclError:
+            return
+
+        # check whether the entry written belongs to the RGB colour space
+        # if yes, calculate and write the components of all other colour spaces
+        # but disable the trace first
+        # so that the latter action does not trigger a trace
+        if current_colour_space == 'RGB':
+            self.trace_disabled = True
+            current_components = [self.supported_colour_spaces[current_colour_space].components[i].get() for i in range(3)]
+
+            # use the above, calculate the components for other colour spaces
+            for colour_space in self.supported_colour_spaces:
+                if colour_space == 'RGB' or colour_space == self.update_disabled:
+                    continue
+
+                changed_components = self.supported_colour_spaces[colour_space].from_RGB(current_components)
+                for i in range(3):
+                    self.supported_colour_spaces[colour_space].components[i].set(changed_components[i])
+
+            self.trace_disabled = False
+
 
         # colour_space = name[: -2]
         # colour_components = [item.get() for item in self.contents_dict[colour_space]]
@@ -177,12 +214,47 @@ Returns:
 
     ###########################################################################
 
-    def RGB_to_CMY(self): pass
-    def CMY_to_RGB(self): pass
+    def RGB_to_CMY(self, components):
+        return [255 - component for component in components]
 
-    def RGB_to_HSV(self): pass
-    def HSV_to_RGB(self): pass
+    ###########################################################################
 
-    def RGB_to_HSL(self): pass
-    def HSL_to_RGB(self): pass
+    def CMY_to_RGB(self, components):
+        return [255 - component for component in components]
+
+    ###########################################################################
+
+    def RGB_to_HSV(self, components):
+
+        normalised_components = (components[i] / self.supported_colour_spaces['RGB'].maximum[i] for i in range(3))
+        normalised_changed_components = colorsys.rgb_to_hsv(*normalised_components)
+        changed_components = [normalised_changed_components[i] * self.supported_colour_spaces['HSV'].maximum[i] for i in range(3)]
+        return [round(changed_component) for changed_component in changed_components]
+
+    ###########################################################################
+
+    def HSV_to_RGB(self, components):
+        normalised_components = (components[i] / self.supported_colour_spaces['HSV'].maximum[i] for i in range(3))
+        normalised_changed_components = colorsys.hsv_to_rgb(*normalised_components)
+        changed_components = [normalised_changed_components[i] * self.supported_colour_spaces['RGB'].maximum[i] for i in range(3)]
+        return [round(changed_component) for changed_component in changed_components]
+
+    ###########################################################################
+
+    def RGB_to_HSL(self, components):
+
+        # this is not as straightforward as the previous ones
+        # the library function available is `colorsys.rgb_to_hls'
+        # I am representing the components as HSL, not HLS
+        # so, the last two components have to be manually interchanged
+        normalised_components = (components[i] / self.supported_colour_spaces['RGB'].maximum[i] for i in range(3))
+        normalised_changed_components = colorsys.rgb_to_hls(*normalised_components)
+        normalised_changed_components = [normalised_changed_components[0], normalised_changed_components[2], normalised_changed_components[1]]
+        changed_components = [normalised_changed_components[i] * self.supported_colour_spaces['HSL'].maximum[i] for i in range(3)]
+        return [round(changed_component) for changed_component in changed_components]
+
+    ###########################################################################
+
+    def HSL_to_RGB(self, components):
+        return [0, 0, 0]
 
