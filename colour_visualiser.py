@@ -73,19 +73,19 @@ Methods:
                                   self.RGB_to_CMY, self.CMY_to_RGB),
             'HSV': colour_options([None,  None,         None],
                                   ['Hue', 'Saturation', 'Value'],
-                                  [359,   255,          255],
+                                  [359,   100,          100],
                                   self.RGB_to_HSV, self.HSV_to_RGB),
             'HSL': colour_options([None,  None,         None],
                                   ['Hue', 'Saturation', 'Luminance'],
-                                  [359,   255,          255],
+                                  [359,   100,          100],
                                   self.RGB_to_HSL, self.HSL_to_RGB),
         }
 
         # the plan is to use a chain of traces to update the colour information
         # hence, use these to determine whether to continue or not
         # otherwise, there will be an infinite loop of traces
-        self.trace_disabled = False   # disable all traces
-        self.update_disabled = 'none' # disable updating a colour space
+        self.trace_disabled = False # switch to disable all traces
+        self.update_disabled = None # disable updating a colour space
 
         # title
         main_lbl = tk.Label(self, text = 'Colour Visualiser')
@@ -193,51 +193,44 @@ Returns:
                     self.supported_colour_spaces[colour_space].components[i].set(changed_components[i])
 
             self.trace_disabled = False
+            return
 
+        # the entry which was written does not belong to the RGB colour space
+        # calculate and write the components of the RGB colour space
+        self.update_disabled = current_colour_space
+        current_components = [self.supported_colour_spaces[current_colour_space].components[i].get() for i in range(3)]
+        changed_components = self.supported_colour_spaces[current_colour_space].to_RGB(current_components)
+        for i in range(3):
+            self.supported_colour_spaces['RGB'].components[i].set(changed_components[i])
+        self.update_disabled = None
 
-        # colour_space = name[: -2]
-        # colour_components = [item.get() for item in self.contents_dict[colour_space]]
-
-        # if colour_space == 'RGB':
-        #     self.trace_disabled = True
-        #     for i in self.contents_dict:
-        #         if i == self.update_disabled or i == 'RGB': continue
-        #         self.convert_from_RGB_to_other[i](colour_components)
-        #     self.trace_disabled = False
-        #     return
         # hex_code_of_colour = ''.join(f'{colour:02x}' for colour in (red, grn, blu))
-
-        # self.update_disabled = colour_space
-        # self.convert_from_other_to_RGB[colour_space](colour_components)
-        # time.sleep(1)
-        # self.update_disabled = 'none'
 
     ###########################################################################
 
     def RGB_to_CMY(self, components):
-        return [255 - component for component in components]
+        return [x - y for x, y in zip(self.supported_colour_spaces['RGB'].maximum, components)]
 
     ###########################################################################
 
     def CMY_to_RGB(self, components):
-        return [255 - component for component in components]
+        return [x - y for x, y in zip(self.supported_colour_spaces['CMY'].maximum, components)]
 
     ###########################################################################
 
     def RGB_to_HSV(self, components):
-
-        normalised_components = (components[i] / self.supported_colour_spaces['RGB'].maximum[i] for i in range(3))
-        normalised_changed_components = colorsys.rgb_to_hsv(*normalised_components)
-        changed_components = [normalised_changed_components[i] * self.supported_colour_spaces['HSV'].maximum[i] for i in range(3)]
-        return [round(changed_component) for changed_component in changed_components]
+        normalised = (x / y for x, y in zip(components, self.supported_colour_spaces['RGB'].maximum))
+        changed = colorsys.rgb_to_hsv(*normalised)
+        denormalised = [x * y for x, y in zip(changed, self.supported_colour_spaces['HSV'].maximum)]
+        return [round(item) for item in denormalised]
 
     ###########################################################################
 
     def HSV_to_RGB(self, components):
-        normalised_components = (components[i] / self.supported_colour_spaces['HSV'].maximum[i] for i in range(3))
-        normalised_changed_components = colorsys.hsv_to_rgb(*normalised_components)
-        changed_components = [normalised_changed_components[i] * self.supported_colour_spaces['RGB'].maximum[i] for i in range(3)]
-        return [round(changed_component) for changed_component in changed_components]
+        normalised = (x / y for x, y in zip(components, self.supported_colour_spaces['HSV'].maximum))
+        changed = colorsys.hsv_to_rgb(*normalised)
+        denormalised = [x * y for x, y in zip(changed, self.supported_colour_spaces['RGB'].maximum)]
+        return [round(item) for item in denormalised]
 
     ###########################################################################
 
@@ -247,14 +240,20 @@ Returns:
         # the library function available is `colorsys.rgb_to_hls'
         # I am representing the components as HSL, not HLS
         # so, the last two components have to be manually interchanged
-        normalised_components = (components[i] / self.supported_colour_spaces['RGB'].maximum[i] for i in range(3))
-        normalised_changed_components = colorsys.rgb_to_hls(*normalised_components)
-        normalised_changed_components = [normalised_changed_components[0], normalised_changed_components[2], normalised_changed_components[1]]
-        changed_components = [normalised_changed_components[i] * self.supported_colour_spaces['HSL'].maximum[i] for i in range(3)]
-        return [round(changed_component) for changed_component in changed_components]
+        normalised = (x / y for x, y in zip(components, self.supported_colour_spaces['RGB'].maximum))
+        changed = colorsys.rgb_to_hls(*normalised)
+        changed = (changed[0], changed[2], changed[1])
+        denormalised = [x * y for x, y in zip(changed, self.supported_colour_spaces['HSL'].maximum)]
+        return [round(item) for item in denormalised]
 
     ###########################################################################
 
     def HSL_to_RGB(self, components):
-        return [0, 0, 0]
+
+        # same comments as above apply
+        normalised = tuple(x / y for x, y in zip(components, self.supported_colour_spaces['HSL'].maximum))
+        normalised = (normalised[0], normalised[2], normalised[1])
+        changed = colorsys.hls_to_rgb(*normalised)
+        denormalised = [x * y for x, y in zip(changed, self.supported_colour_spaces['RGB'].maximum)]
+        return [round(item) for item in denormalised]
 
