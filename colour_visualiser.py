@@ -125,8 +125,8 @@ Methods:
         # this makes no sense
         # representation of a colour cannot be the same in all colour spaces
         # hence, at the beginning, force a colour conversion
-        for i in range(3):
-            self.supported_colour_spaces['RGB'].components[i].set(0)
+        for item in self.supported_colour_spaces['RGB'].components:
+            item.set(0)
 
     ###########################################################################
 
@@ -181,7 +181,7 @@ Returns:
         # so that the latter action does not trigger a trace
         if current_colour_space == 'RGB':
             self.trace_disabled = True
-            current_components = [self.supported_colour_spaces[current_colour_space].components[i].get() for i in range(3)]
+            current_components = [item.get() for item in self.supported_colour_spaces[current_colour_space].components]
 
             # use the above, calculate the components for other colour spaces
             for colour_space in self.supported_colour_spaces:
@@ -189,8 +189,12 @@ Returns:
                     continue
 
                 changed_components = self.supported_colour_spaces[colour_space].from_RGB(current_components)
-                for i in range(3):
-                    self.supported_colour_spaces[colour_space].components[i].set(changed_components[i])
+                for item, x in zip(self.supported_colour_spaces[colour_space].components, changed_components):
+                    item.set(x)
+
+            # set the background colour of the designated label
+            hex_colour_code = ''.join(f'{i:02x}' for i in current_components)
+            self.colour_lbl.config(bg = f'#{hex_colour_code}')
 
             self.trace_disabled = False
             return
@@ -198,10 +202,10 @@ Returns:
         # the entry which was written does not belong to the RGB colour space
         # calculate and write the components of the RGB colour space
         self.update_disabled = current_colour_space
-        current_components = [self.supported_colour_spaces[current_colour_space].components[i].get() for i in range(3)]
+        current_components = [item.get() for item in self.supported_colour_spaces[current_colour_space].components]
         changed_components = self.supported_colour_spaces[current_colour_space].to_RGB(current_components)
-        for i in range(3):
-            self.supported_colour_spaces['RGB'].components[i].set(changed_components[i])
+        for item, x in zip(self.supported_colour_spaces['RGB'].components, changed_components):
+            item.set(x)
         self.update_disabled = None
 
         # hex_code_of_colour = ''.join(f'{colour:02x}' for colour in (red, grn, blu))
