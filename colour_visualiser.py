@@ -40,6 +40,10 @@ Methods:
     HSV_to_RGB: conversion function
     RGB_to_HSL: conversion function
     HSL_to_RGB: conversion function
+    RGB_to_YUV: conversion function
+    YUV_to_RGB: conversion function
+    RGB_to_YIQ: conversion function
+    YIQ_to_RGB: conversion function
 '''
 
     ###########################################################################
@@ -54,6 +58,7 @@ Methods:
         # trick to easily access any property of any colour model
         # `components': list of 3 `tk.IntVar's which contain the components
         # `names': names of the 3 components
+        # `minimum': the minimum values the 3 components may take
         # `maximum': the maximum values the 3 components may take
         # `from_RGB': function to convert components from RGB to another model
         # `to_RGB': function to convert components to RGB from another model
@@ -61,31 +66,45 @@ Methods:
         #     self.supported_colour_models['HSL'].maximum[1]
         #     self.supported_colour_models['RGB'].components[0]
         #     self.supported_colour_models['CMY'].from_RGB
-        colour_options = namedtuple('colour_options', 'components names maximum from_RGB to_RGB')
+        colour_options = namedtuple('colour_options', 'components names minimum maximum from_RGB to_RGB')
         self.supported_colour_models = {
             'RGB': colour_options([None,  None,    None],
                                   ['Red', 'Green', 'Blue'],
+                                  [0,     0,       0],
                                   [255,   255,     255],
                                   None, None),
             'CMY': colour_options([None,   None,      None],
                                   ['Cyan', 'Magenta', 'Yellow'],
+                                  [0,      0,         0],
                                   [255,    255,       255],
                                   self.RGB_to_CMY, self.CMY_to_RGB),
             'HSV': colour_options([None,  None,         None],
                                   ['Hue', 'Saturation', 'Value'],
+                                  [0,     0,            0],
                                   [359,   100,          100],
                                   self.RGB_to_HSV, self.HSV_to_RGB),
             'HSL': colour_options([None,  None,         None],
                                   ['Hue', 'Saturation', 'Luminance'],
+                                  [0,     0,            0],
                                   [359,   100,          100],
                                   self.RGB_to_HSL, self.HSL_to_RGB),
+            'YUV': colour_options([None,        None,   None],
+                                  ['Luminance', 'Blue', 'Red'],
+                                  [0,           -128,   -128],
+                                  [255,         127,    127],
+                                  self.RGB_to_YUV, self.YUV_to_RGB),
+            'YIQ': colour_options([None,        None,       None],
+                                  ['Luminance', 'In-Phase', 'Quadrature'],
+                                  [0,           -128,       -128],
+                                  [255,         127,        127],
+                                  self.RGB_to_YIQ, self.YIQ_to_RGB),
         }
 
         # the plan is to use a chain of traces to update the colour information
         # hence, use these to determine whether to continue or not
         # otherwise, there will be an infinite loop of traces
         self.trace_disabled = False # switch to disable all traces
-        self.update_disabled = None # disable updating for a colour model
+        self.update_disabled = None # disable update for a colour model
 
         # title
         main_lbl = tk.Label(self, text = 'Colour Visualiser')
@@ -101,18 +120,24 @@ Methods:
             current_frame = tk.Frame(self)
 
             name_lbl = tk.Label(current_frame, text = f'{colour_model} Colour Model')
-            name_lbl.grid(row = 0, column = 0, columnspan = 3, padx = pad_x, pady = pad_y)
+            name_lbl.grid(row = 0, column = 0, columnspan = 6, padx = pad_x, pady = pad_y)
 
             for k in range(3):
                 var = tk.IntVar(name = f'{colour_model}_{k}')
                 lbl = tk.Label(current_frame, text = self.supported_colour_models[colour_model].names[k], width = 10)
+                l_l = tk.Label(current_frame, text = f'{self.supported_colour_models[colour_model].minimum[k]}', width = 4, anchor = 'e')
+                le1 = tk.Label(current_frame, text = '≤')
                 ent = tk.Entry(current_frame, textvariable = var, justify = 'right', width = 6)
-                lim = tk.Label(current_frame, text = f' / {self.supported_colour_models[colour_model].maximum[k]}', width = 4)
+                le2 = tk.Label(current_frame, text = '≤')
+                u_l = tk.Label(current_frame, text = f'{self.supported_colour_models[colour_model].maximum[k]}', width = 4, anchor = 'w')
 
                 var.trace_add('write', self.colour_update_wrapper)
                 lbl.grid(row = k + 1, column = 0, padx = pad_x, pady = pad_y)
-                ent.grid(row = k + 1, column = 1, pady = pad_y)
-                lim.grid(row = k + 1, column = 2, pady = pad_y)
+                l_l.grid(row = k + 1, column = 1, pady = pad_y)
+                le1.grid(row = k + 1, column = 2, pady = pad_y)
+                ent.grid(row = k + 1, column = 3, pady = pad_y)
+                le2.grid(row = k + 1, column = 4, pady = pad_y)
+                u_l.grid(row = k + 1, column = 5, pady = pad_y)
 
                 self.supported_colour_models[colour_model].components[k] = var
 
@@ -169,8 +194,9 @@ Returns:
         try:
             for i in range(3):
                 current_component = self.supported_colour_models[current_colour_model].components[i].get()
+                current_minimum = self.supported_colour_models[current_colour_model].minimum[i]
                 current_maximum = self.supported_colour_models[current_colour_model].maximum[i]
-                if not 0 <= current_component <= current_maximum:
+                if not current_minimum <= current_component <= current_maximum:
                     return
         except tk.TclError:
             return
@@ -183,7 +209,7 @@ Returns:
             self.trace_disabled = True
             current_components = [item.get() for item in self.supported_colour_models[current_colour_model].components]
 
-            # use the above, calculate the components for other colour models
+            # using the above, calculate the components for other colour models
             for colour_model in self.supported_colour_models:
                 if colour_model == 'RGB' or colour_model == self.update_disabled:
                     continue
@@ -258,4 +284,24 @@ Returns:
         changed = colorsys.hls_to_rgb(*normalised)
         denormalised = [x * y for x, y in zip(changed, self.supported_colour_models['RGB'].maximum)]
         return [round(item) for item in denormalised]
+
+    ###########################################################################
+
+    def RGB_to_YUV(self, components):
+        return [0, 0, 0]
+
+    ###########################################################################
+
+    def YUV_to_RGB(self, components):
+        return [0, 0, 0]
+
+    ###########################################################################
+
+    def RGB_to_YIQ(self, components):
+        return [0, 0, 0]
+
+    ###########################################################################
+
+    def YIQ_to_RGB(self, components):
+        return [0, 0, 0]
 
