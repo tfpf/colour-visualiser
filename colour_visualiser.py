@@ -48,7 +48,6 @@ Methods:
 
     ###########################################################################
 
-
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         self.grid(padx = pad_x, pady = pad_y)
@@ -247,17 +246,17 @@ Returns:
     ###########################################################################
 
     def RGB_to_HSV(self, components):
-        normalised = (x / y for x, y in zip(components, self.supported_colour_models['RGB'].maximum))
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum))
         changed = colorsys.rgb_to_hsv(*normalised)
-        denormalised = [x * y for x, y in zip(changed, self.supported_colour_models['HSV'].maximum)]
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['HSV'].minimum, self.supported_colour_models['HSV'].maximum)]
         return [round(item) for item in denormalised]
 
     ###########################################################################
 
     def HSV_to_RGB(self, components):
-        normalised = (x / y for x, y in zip(components, self.supported_colour_models['HSV'].maximum))
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['HSV'].minimum, self.supported_colour_models['HSV'].maximum))
         changed = colorsys.hsv_to_rgb(*normalised)
-        denormalised = [x * y for x, y in zip(changed, self.supported_colour_models['RGB'].maximum)]
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum)]
         return [round(item) for item in denormalised]
 
     ###########################################################################
@@ -268,10 +267,10 @@ Returns:
         # the library function available is `colorsys.rgb_to_hls'
         # I am representing the components as HSL, not HLS
         # so, the last two components have to be manually interchanged
-        normalised = (x / y for x, y in zip(components, self.supported_colour_models['RGB'].maximum))
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum))
         changed = colorsys.rgb_to_hls(*normalised)
         changed = (changed[0], changed[2], changed[1])
-        denormalised = [x * y for x, y in zip(changed, self.supported_colour_models['HSL'].maximum)]
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['HSL'].minimum, self.supported_colour_models['HSL'].maximum)]
         return [round(item) for item in denormalised]
 
     ###########################################################################
@@ -279,21 +278,69 @@ Returns:
     def HSL_to_RGB(self, components):
 
         # same comments as above apply
-        normalised = tuple(x / y for x, y in zip(components, self.supported_colour_models['HSL'].maximum))
+        normalised = tuple((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['HSL'].minimum, self.supported_colour_models['HSL'].maximum))
         normalised = (normalised[0], normalised[2], normalised[1])
         changed = colorsys.hls_to_rgb(*normalised)
-        denormalised = [x * y for x, y in zip(changed, self.supported_colour_models['RGB'].maximum)]
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum)]
         return [round(item) for item in denormalised]
 
     ###########################################################################
 
     def RGB_to_YUV(self, components):
-        return [0, 0, 0]
+
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum))
+        R, G, B = normalised
+
+        # conversion is according to ITU-R BT.601
+        # other standards may give different results
+        W_R = 0.299
+        W_G = 0.587
+        W_B = 0.114
+        U_m = 0.436
+        V_m = 0.615
+        Y = W_R * R + W_G * G + W_B * B
+        U = U_m * (B - Y) / (1 - W_B)
+        V = V_m * (R - Y) / (1 - W_R)
+
+        # of these, `Y' is between 0 and 1, but `U' and `V' are not
+        # `U' lies between `-U_m' and `U_m'
+        # `V' lies between `-V_m' and `V_m'
+        # normalise them
+        # so that the same code used in other functions can be applied
+        U = (U + U_m) / (2 * U_m)
+        V = (V + V_m) / (2 * V_m)
+
+        changed = (Y, U, V)
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['YUV'].minimum, self.supported_colour_models['YUV'].maximum)]
+        return [round(item) for item in denormalised]
 
     ###########################################################################
 
     def YUV_to_RGB(self, components):
-        return [0, 0, 0]
+
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['YUV'].minimum, self.supported_colour_models['YUV'].maximum))
+        Y, U, V = components
+
+        W_R = 0.299
+        W_G = 0.587
+        W_B = 0.114
+        U_m = 0.436
+        V_m = 0.615
+
+        # all three are now between 0 and 1
+        # change `U' and `V' to be in the expected range
+        # don't stare too much
+        # they are simply reversed version of equations in previous function
+        U = (2 * U - 1) * U_m
+        V = (2 * V - 1) * V_m
+
+        R = Y + V * (1 - W_R) / V_m
+        G = Y - U * W_B * (1 - W_B) / (U_m * W_G) - V * W_R * (1 - W_R) / (V_m * W_G)
+        B = Y + U * (1 - W_B) / U_m
+
+        changed = (R, G, B)
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum)]
+        return [round(item) for item in denormalised]
 
     ###########################################################################
 
