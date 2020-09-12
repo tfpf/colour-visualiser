@@ -94,7 +94,7 @@ Methods:
                                   self.RGB_to_YUV, self.YUV_to_RGB),
             'YIQ': colour_options([None,        None,       None],
                                   ['Luminance', 'In-Phase', 'Quadrature'],
-                                  [0,           -128,       -128],
+                                  [0,           -127,       -127],
                                   [255,         127,        127],
                                   self.RGB_to_YIQ, self.YIQ_to_RGB),
         }
@@ -287,68 +287,42 @@ Returns:
     ###########################################################################
 
     def RGB_to_YUV(self, components):
-
-        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum))
-        R, G, B = normalised
-
-        # conversion is according to ITU-R BT.601
-        # other standards may give different results
-        W_R = 0.299
-        W_G = 0.587
-        W_B = 0.114
-        U_m = 0.436
-        V_m = 0.615
-        Y = W_R * R + W_G * G + W_B * B
-        U = U_m * (B - Y) / (1 - W_B)
-        V = V_m * (R - Y) / (1 - W_R)
-
-        # of these, `Y' is between 0 and 1, but `U' and `V' are not
-        # `U' lies between `-U_m' and `U_m'
-        # `V' lies between `-V_m' and `V_m'
-        # normalise them
-        # so that the same code used in other functions can be applied
-        U = (U + U_m) / (2 * U_m)
-        V = (V + V_m) / (2 * V_m)
-
-        changed = (Y, U, V)
-        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['YUV'].minimum, self.supported_colour_models['YUV'].maximum)]
-        return [round(item) for item in denormalised]
+        return [0, 0, 0]
 
     ###########################################################################
 
     def YUV_to_RGB(self, components):
-
-        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['YUV'].minimum, self.supported_colour_models['YUV'].maximum))
-        Y, U, V = components
-
-        W_R = 0.299
-        W_G = 0.587
-        W_B = 0.114
-        U_m = 0.436
-        V_m = 0.615
-
-        # all three are now between 0 and 1
-        # change `U' and `V' to be in the expected range
-        # don't stare too much
-        # they are simply reversed version of equations in previous function
-        U = (2 * U - 1) * U_m
-        V = (2 * V - 1) * V_m
-
-        R = Y + V * (1 - W_R) / V_m
-        G = Y - U * W_B * (1 - W_B) / (U_m * W_G) - V * W_R * (1 - W_R) / (V_m * W_G)
-        B = Y + U * (1 - W_B) / U_m
-
-        changed = (R, G, B)
-        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum)]
-        return [round(item) for item in denormalised]
+        return [0, 0, 0]
 
     ###########################################################################
 
     def RGB_to_YIQ(self, components):
-        return [0, 0, 0]
+
+        # this colour model is somewhat weird: the components can be negative
+        #      0.0000 <= Y <= 1.0000
+        #     -0.5990 <= I <= 0.5990
+        #     -0.5251 <= Q <= 0.5251
+        # after using library function, modify them to be in range: -1 to 1
+        # magnitude of maximum and minimum values of `I' and `Q' must be same
+        # otherwise, this conversion will not work
+        I_max = colorsys.rgb_to_yiq(1, 0, 0)[1]
+        Q_max = colorsys.rgb_to_yiq(1, 0, 1)[2]
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum))
+        changed = colorsys.rgb_to_yiq(*normalised)
+        changed = (changed[0], changed[1] / I_max, changed[2] / Q_max)
+        denormalised = [x * u for x, u in zip(changed, self.supported_colour_models['YIQ'].maximum)]
+        return [round(item) for item in denormalised]
 
     ###########################################################################
 
     def YIQ_to_RGB(self, components):
-        return [0, 0, 0]
+
+        # same comments as above apply
+        I_max = colorsys.rgb_to_yiq(1, 0, 0)[1]
+        Q_max = colorsys.rgb_to_yiq(1, 0, 1)[2]
+        normalised = tuple(x / u for x, u in zip(components, self.supported_colour_models['YIQ'].maximum))
+        normalised = (normalised[0], normalised[1] * I_max, normalised[2] * Q_max)
+        changed = colorsys.yiq_to_rgb(*normalised)
+        denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum)]
+        return [round(item) for item in denormalised]
 
