@@ -89,7 +89,7 @@ Methods:
                                   self.RGB_to_HSL, self.HSL_to_RGB),
             'YUV': colour_options([None,        None,   None],
                                   ['Luminance', 'Blue', 'Red'],
-                                  [0,           -128,   -128],
+                                  [0,           -127,   -127],
                                   [255,         127,    127],
                                   self.RGB_to_YUV, self.YUV_to_RGB),
             'YIQ': colour_options([None,        None,       None],
@@ -287,21 +287,44 @@ Returns:
     ###########################################################################
 
     def RGB_to_YUV(self, components):
-        return [0, 0, 0]
+
+        # like YIQ, YUV components can be negative
+        #      0.000 ≤ Y ≤ 1.000
+        #     -0.436 ≤ U ≤ 0.436
+        #     -0.615 ≤ V ≤ 0.615
+        # no library function available for this, so do calculation manually
+        U_max = 0.436
+        V_max = 0.615
+        normalised = ((x - l) / (u - l) for x, l, u in zip(components, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum))
+        R, G, B = normalised
+        Y = ( 0.29900 * R + 0.58700 * G + 0.11400 * B) * self.supported_colour_models['YUV'].maximum[0]
+        U = (-0.14713 * R - 0.28886 * G + 0.43600 * B) / U_max * self.supported_colour_models['YUV'].maximum[1]
+        V = ( 0.61500 * R - 0.51499 * G - 0.10001 * B) / V_max * self.supported_colour_models['YUV'].maximum[2]
+        return [round(Y), round(U), round(V)]
 
     ###########################################################################
 
     def YUV_to_RGB(self, components):
-        return [0, 0, 0]
+
+        # reversing the above operation
+        U_max = 0.436
+        V_max = 0.615
+        normalised = tuple(x / u for x, u in zip(components, self.supported_colour_models['YUV'].maximum))
+        normalised = (normalised[0], normalised[1] * U_max, normalised[2] * V_max)
+        Y, U, V = normalised
+        R = (Y               + 1.13983 * V) * (self.supported_colour_models['RGB'].maximum[0] - self.supported_colour_models['RGB'].minimum[0]) + self.supported_colour_models['RGB'].minimum[0]
+        G = (Y - 0.39465 * U - 0.58060 * V) * (self.supported_colour_models['RGB'].maximum[1] - self.supported_colour_models['RGB'].minimum[1]) + self.supported_colour_models['RGB'].minimum[1]
+        B = (Y + 2.03211 * U              ) * (self.supported_colour_models['RGB'].maximum[2] - self.supported_colour_models['RGB'].minimum[2]) + self.supported_colour_models['RGB'].minimum[2]
+        return [round(R), round(G), round(B)]
 
     ###########################################################################
 
     def RGB_to_YIQ(self, components):
 
         # this colour model is somewhat weird: the components can be negative
-        #      0.0000 <= Y <= 1.0000
-        #     -0.5990 <= I <= 0.5990
-        #     -0.5251 <= Q <= 0.5251
+        #      0.0000 ≤ Y ≤ 1.0000
+        #     -0.5990 ≤ I ≤ 0.5990
+        #     -0.5251 ≤ Q ≤ 0.5251
         # after using library function, modify them to be in range: -1 to 1
         # magnitude of maximum and minimum values of `I' and `Q' must be same
         # otherwise, this conversion will not work
