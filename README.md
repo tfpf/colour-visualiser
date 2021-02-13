@@ -1,2 +1,2 @@
 # colour-visualiser
-show and interconvert colours between different colour spaces
+Describe the composition of a colour various various colour models and also display the colour.
