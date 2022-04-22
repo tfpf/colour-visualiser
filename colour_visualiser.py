@@ -110,7 +110,7 @@ Methods:
         main_lbl.grid(row = 0, column = 0, columnspan = 2, padx = pad_x, pady = pad_y)
 
         # the background colour of this label will be the input colour
-        self.colour_lbl = tk.Label(self, text = (' ' * 140 + '\n') * 2, bg = 'black')
+        self.colour_lbl = tk.Label(self, text = (' ' * 140 + '\n') * 2, bg = 'black', highlightbackground = 'white', highlightcolor = 'white', highlightthickness = 2)
         self.colour_lbl.grid(row = 1, column = 0, columnspan = 2, padx = pad_x, pady = (pad_y, 2 * pad_y))
 
         # create one frame for each colour model
@@ -196,6 +196,7 @@ Returns:
                 current_minimum = self.supported_colour_models[current_colour_model].minimum[i]
                 current_maximum = self.supported_colour_models[current_colour_model].maximum[i]
                 if not current_minimum <= current_component <= current_maximum:
+                    self.colour_lbl.config(highlightbackground = 'red', highlightcolor='red', highlightthickness = 2, bg = 'white')
                     return
         except tk.TclError:
             return
@@ -219,7 +220,7 @@ Returns:
 
             # set the background colour of the designated label
             hex_colour_code = ''.join(f'{i:02x}' for i in current_components)
-            self.colour_lbl.config(bg = f'#{hex_colour_code}')
+            self.colour_lbl.config(highlightbackground = 'white', highlightcolor = 'white', highlightthickness = 2, bg = f'#{hex_colour_code}')
 
             self.trace_disabled = False
             return
