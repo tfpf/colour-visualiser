@@ -1,4 +1,4 @@
-#! /usr/local/bin/python3.8
+#! /usr/bin/python3
 
 import colorsys
 import time
@@ -9,7 +9,7 @@ from collections import namedtuple
 pad_x = 10
 pad_y = 10
 
-#######################################################################################################################
+###############################################################################
 
 class colour_visualiser(tk.Frame):
     '''\
@@ -348,4 +348,3 @@ Returns:
         changed = colorsys.yiq_to_rgb(*normalised)
         denormalised = [l + x * (u - l) for x, l, u in zip(changed, self.supported_colour_models['RGB'].minimum, self.supported_colour_models['RGB'].maximum)]
         return [round(item) for item in denormalised]
-
